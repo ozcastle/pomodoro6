@@ -23,10 +23,10 @@ let pendingSessionCount = null;
 const savedSecsPerMode = { focus: null, rest: null, done: null };
 
 const TIME_CONFIG = {
-  focus:    { min: 5, max: 120, step: 1, unit: '분', label: '집중 시간',      valId: 'focusTimeVal'   },
-  rest:     { min: 3, max: 60,  step: 1, unit: '분', label: '짧은 휴식 시간', valId: 'restTimeVal'    },
+  focus:    { min: 1, max: 120, step: 1, unit: '분', label: '집중 시간',      valId: 'focusTimeVal'   },
+  rest:     { min: 1, max: 60,  step: 1, unit: '분', label: '짧은 휴식 시간', valId: 'restTimeVal'    },
   count:    { min: 1, max: 10,  step: 1, unit: '회', label: '세션 횟수',      valId: 'countVal'       },
-  longRest: { min: 5, max: 120, step: 1, unit: '분', label: '긴 휴식 시간',   valId: 'longRestTimeVal'},
+  longRest: { min: 1, max: 120, step: 1, unit: '분', label: '긴 휴식 시간',   valId: 'longRestTimeVal'},
 };
 
 // ============================================================
@@ -107,7 +107,8 @@ function updateSessionBadge() {
   const badge = document.getElementById('sessionBadge');
   if (!badge) return;
   const task = getTopUncheckedTask();
-  badge.textContent = task !== null ? task : '모든 할 일 완료';
+  const text = task !== null ? task : '모든 할 일 완료';
+  badge.innerHTML = '<i class="fa-solid fa-list-check" style="margin-right:10px;font-size:14px;"></i>' + text;
 }
 
 // ============================================================

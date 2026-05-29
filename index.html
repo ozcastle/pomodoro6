@@ -325,7 +325,7 @@
   .session-dots {
     display: flex;
     gap: 10px;
-    margin-bottom: 8px;
+    margin: 28px;
   }
 
   .dot {
@@ -345,7 +345,7 @@
     font-family: var(--current-font);
     transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
     letter-spacing: 0.01em;
-    margin-bottom: 12px;
+    margin: 35px 0 20px;
     font-size: 17px;
     cursor: pointer;
   }
@@ -362,7 +362,7 @@
 
   .secondary-btn {
     width: 100%;
-    padding: 16px;
+    padding: 20px;
     border-radius: var(--radius-md);
     border: 1.5px solid rgba(155,111,208,0.25);
     background: var(--btn-secondary);
@@ -1207,7 +1207,7 @@ const THEMES = {
     shadowDrop: 'rgba(61,166,148,0.22)',
   },
   rest: {
-    bg: '#DCF0E8', bgCard: '#EBF7F2',
+    bg: '#E8F4F0', bgCard: '#F2FAF7',
     btnSec: '#C6E6DA', btnSecActive: '#B0DCCB',
     accent: '#3DA694', accentLight: '#6DC0B0',
     accentPale: 'rgba(109,192,176,0.20)',
@@ -1631,8 +1631,8 @@ function applyTheme(mode) {
       <div class="session-badge" id="sessionBadge">리서치 정리</div>
     </div>
 
-    <!-- Mode label -->
-    <div class="session-label" id="modeLabel">천천히 한 번 해볼까요?</div>
+    <!-- Mode label
+    <div class="session-label" id="modeLabel"></div> -->
 
     <!-- Session dots -->
     <div style="display:flex;justify-content:center;margin-top:8px;">
@@ -1856,31 +1856,31 @@ function applyTheme(mode) {
           <div class="sound-icon selected"><i class="fa fa-tree"></i></div>
           <div>
             <div class="sound-name">숲</div>
-            <div class="sound-desc">새소리 · 바람</div>
+            <!-- <div class="sound-desc">새소리 · 바람</div> -->
           </div>
           <div class="sound-play"><i class="fa fa-play"></i></div>
         </div>
         <div class="sound-option" data-key="rain" onclick="selectBgm(this)">
           <div class="sound-icon"><i class="fa fa-cloud-rain"></i></div>
           <div>
-            <div class="sound-name">비</div>
-            <div class="sound-desc">빗소리</div>
+            <div class="sound-name">빗소리</div>
+            <!-- <div class="sound-desc">빗소리</div> -->
           </div>
           <div class="sound-play"><i class="fa fa-play"></i></div>
         </div>
         <div class="sound-option" data-key="lofi" onclick="selectBgm(this)">
           <div class="sound-icon"><i class="fa fa-headphones"></i></div>
           <div>
-            <div class="sound-name">로파이</div>
-            <div class="sound-desc">잔잔한 음악</div>
+            <div class="sound-name">잔잔한 음악</div>
+            <!-- <div class="sound-desc">잔잔한 음악</div> -->
           </div>
           <div class="sound-play"><i class="fa fa-play"></i></div>
         </div>
         <div class="sound-option" data-key="white" onclick="selectBgm(this)">
           <div class="sound-icon"><i class="fa fa-wave-square"></i></div>
           <div>
-            <div class="sound-name">화이트</div>
-            <div class="sound-desc">백색 소음</div>
+            <div class="sound-name">백색 소음</div>
+            <!-- <div class="sound-desc">백색 소음</div> -->
           </div>
           <div class="sound-play"><i class="fa fa-play"></i></div>
         </div>
@@ -1894,7 +1894,7 @@ function applyTheme(mode) {
   ──────────────────────── -->
   <nav class="bottom-nav">
     <button class="nav-item active" onclick="switchScreen('timer',this)">
-      <i class="fa fa-circle-play"></i>
+      <i class="fa-solid fa-stopwatch"></i>
       <span>타이머</span>
     </button>
     <button class="nav-item" onclick="switchScreen('checklist',this)">
@@ -1902,7 +1902,7 @@ function applyTheme(mode) {
       <span>작업</span>
     </button>
     <button class="nav-item" onclick="switchScreen('settings',this)">
-      <i class="fa fa-sliders"></i>
+      <i class="fa-solid fa-wrench"></i>
       <span>설정</span>
     </button>
   </nav>
@@ -1916,10 +1916,10 @@ function applyTheme(mode) {
     <div class="modal-sheet">
       <div class="modal-handle"></div>
       <div class="modal-icon-wrap modal-icon-focus">
-        <i class="fa fa-mug-hot"></i>
+        <i class="fa fa-sun"></i>
       </div>
       <div class="modal-title">집중 끝</div>
-      <div class="modal-body">쉬어볼까요?</div>
+      <!-- <div class="modal-body">쉬어볼까요?</div> -->
       <div class="modal-btn-group">
         <!-- 쉬기: 휴식 모드로 전환 + 자동 시작 -->
         <button class="main-btn btn-rest" onclick="startRestMode(true)">
@@ -1927,7 +1927,7 @@ function applyTheme(mode) {
         </button>
         <!-- 이어가기: 집중 모드 유지 + 자동 시작 -->
         <button class="secondary-btn" onclick="continueFocus()">
-          이어가기
+          <i class="fa-solid fa-arrow-right"></i>&nbsp; 이어가기
         </button>
       </div>
     </div>
@@ -1938,18 +1938,18 @@ function applyTheme(mode) {
     <div class="modal-sheet">
       <div class="modal-handle"></div>
       <div class="modal-icon-wrap modal-icon-rest">
-        <i class="fa fa-sun"></i>
+        <i class="fa fa-mug-hot"></i>
       </div>
       <div class="modal-title">쉬기 끝</div>
-      <div class="modal-body">준비됐어요?</div>
+      <!-- <div class="modal-body">준비됐어요?</div> -->
       <div class="modal-btn-group">
         <!-- 집중 시작하기: 집중 모드로 전환 + 자동 시작 -->
         <button class="main-btn btn-focus" onclick="startFocusMode(true)">
-          <i class="fa fa-play"></i>&nbsp; 집중 시작하기
+          <i class="fa fa-play"></i>&nbsp; 집중 시작
         </button>
         <!-- 좀 더 쉬기: 집중 창으로 전환, 수동 시작 -->
         <button class="secondary-btn" onclick="continueRest()">
-          좀 더 쉬기
+          더 쉬기
         </button>
       </div>
     </div>
@@ -1963,7 +1963,7 @@ function applyTheme(mode) {
         <i class="fa fa-star"></i>
       </div>
       <div class="modal-title">완료!</div>
-      <div class="modal-body">수고했어요.</div>
+      <!-- <div class="modal-body">수고했어요.</div> -->
       <div class="modal-btn-group">
         <!-- 새로 시작: 모든 값 초기화 후 집중 모드 (수동 시작) -->
         <button class="main-btn btn-done" onclick="handleDoneReset()">
@@ -2049,22 +2049,22 @@ function applyTheme(mode) {
       <div class="setting-card" id="alarmSoundsList" style="margin-top:14px;">
         <div class="sound-option" data-key="classic" onclick="selectAlarm(this)">
           <div class="sound-icon selected"><i class="fa fa-bell"></i></div>
-          <div class="sound-name">비프음</div>
+          <div class="sound-name">기본</div>
           <div class="sound-play"><i class="fa fa-play"></i></div>
         </div>
         <div class="sound-option" data-key="fastBeep" onclick="selectAlarm(this)">
           <div class="sound-icon"><i class="fa fa-bolt"></i></div>
-          <div class="sound-name">빠른 비프음</div>
+          <div class="sound-name">빠름</div>
           <div class="sound-play"><i class="fa fa-play"></i></div>
         </div>
         <div class="sound-option" data-key="digital" onclick="selectAlarm(this)">
           <div class="sound-icon"><i class="fa fa-microchip"></i></div>
-          <div class="sound-name">디지털 비프음</div>
+          <div class="sound-name">디지털</div>
           <div class="sound-play"><i class="fa fa-play"></i></div>
         </div>
         <div class="sound-option" data-key="vintage" onclick="selectAlarm(this)">
           <div class="sound-icon"><i class="fa fa-clock-rotate-left"></i></div>
-          <div class="sound-name">빈티지 비프음</div>
+          <div class="sound-name">빈티지</div>
           <div class="sound-play"><i class="fa fa-play"></i></div>
         </div>
 
