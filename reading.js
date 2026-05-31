@@ -1,95 +1,137 @@
 /**
  * reading.js — 읽기 가이드 (포커스 블러)
- * 활성화 상태에서 체크리스트 항목을 클릭하면
- * 해당 항목만 선명하게 강조되고 나머지 화면은 블러 처리됩니다.
+ *
+ * 싱글탭/클릭  → 300ms 후 원래 기능 실행 (더블 확인 후)
+ * 더블탭/클릭  → 해당 영역 강조 + 나머지 블러 (원래 기능 미실행)
+ * 빈 공간 클릭 → 읽기 가이드 즉시 해제
+ * 읽기 가이드 활성 시 하단 네비게이션도 블러
  */
 (function () {
   'use strict';
 
-  let enabled   = false;
-  let focused   = null;
-  let focusedId = null;
+  // 읽기 가이드 대상 요소 셀렉터
+  const READABLE_SELECTOR = [
+    '.check-item', '.chip', '.add-task-btn',
+    '.demo-tab', '.main-btn', '.secondary-btn', '.session-badge', '.timer-ring-wrap',
+    '.setting-row', '.time-btn', '.sound-option',
+  ].join(', ');
+
+  const DOUBLE_TAP_MS = 300;
+
+  let focused      = null;
+  let focusedId    = null;
+  let _lastTapKey  = null;
+  let _lastTapTime = 0;
+  let _approvedClick = null;          // 합성 클릭 마커
+  const _pending = new Map();         // key → { timer, target }
+
+  // ── 요소 식별 키 (재렌더 후에도 동일 요소 인식) ──────────
+  function _getKey(el) {
+    if (el.dataset.id) return 'data:' + el.dataset.id;
+    if (el.id)         return 'id:'   + el.id;
+    const screenId = (el.closest('.screen') || {}).id || '';
+    const cls = [...el.classList].sort().join('|');
+    const text = el.textContent.trim().slice(0, 30);
+    return screenId + ':' + cls + ':' + text;
+  }
+
+  // ── 보류 중인 싱글탭 관리 ────────────────────────────────
+  function _clearPending(key) {
+    const p = _pending.get(key);
+    if (p) { clearTimeout(p.timer); _pending.delete(key); }
+  }
+
+  // 300ms 후 원래 기능을 합성 클릭으로 실행
+  function _scheduleAction(key, target, clientX, clientY) {
+    _clearPending(key);
+    const timer = setTimeout(() => {
+      _pending.delete(key);
+      if (!document.contains(target)) return;
+      const syn = new MouseEvent('click', {
+        bubbles: true, cancelable: true, clientX, clientY,
+      });
+      _approvedClick = syn;
+      target.dispatchEvent(syn);   // dispatchEvent는 동기 실행
+      _approvedClick = null;
+    }, DOUBLE_TAP_MS);
+    _pending.set(key, { timer, target });
+  }
 
   // ── 포커스 핸들링 ────────────────────────────────────────
-  function setFocus(item) {
-    if (focused === item) {
-      clearFocus();
-      return;
-    }
+  function setFocus(el) {
+    if (focused === el) { clearFocus(); return; }
     if (focused) focused.classList.remove('reading-focused');
-    focused   = item;
-    focusedId = item.dataset.id || null;
-    item.classList.add('reading-focused');
-    _setScreenActive(true);
+    document.querySelectorAll('.screen.reading-active')
+            .forEach(s => s.classList.remove('reading-active'));
+
+    focused   = el;
+    focusedId = el.dataset.id || null;
+    el.classList.add('reading-focused');
+
+    const screen = el.closest('.screen');
+    if (screen) screen.classList.add('reading-active');
+    document.body.classList.add('reading-guide-active');
   }
 
   function clearFocus() {
     if (focused) { focused.classList.remove('reading-focused'); focused = null; }
     focusedId = null;
-    _setScreenActive(false);
+    document.querySelectorAll('.screen.reading-active')
+            .forEach(s => s.classList.remove('reading-active'));
+    document.body.classList.remove('reading-guide-active');
   }
 
-  // 동적 렌더 후 DOM이 재생성되면 data-id로 포커스 재적용
+  // 동적 렌더 후 data-id로 포커스 재적용 (checklist.js render() 에서 호출)
   function reapplyFocus() {
     if (!focusedId) return;
-    const item = document.querySelector('[data-id="' + focusedId + '"]');
-    if (item) {
-      focused = item;
-      item.classList.add('reading-focused');
-      _setScreenActive(true);
+    const el = document.querySelector('[data-id="' + focusedId + '"]');
+    if (el) {
+      focused = el;
+      el.classList.add('reading-focused');
+      const screen = el.closest('.screen');
+      if (screen) screen.classList.add('reading-active');
+      document.body.classList.add('reading-guide-active');
     } else {
-      focused   = null;
-      focusedId = null;
-      _setScreenActive(false);
+      clearFocus();
     }
   }
 
-  function _setScreenActive(on) {
-    const screen = document.getElementById('screen-checklist');
-    if (screen) screen.classList.toggle('reading-active', on);
-  }
-
-  // ── 기능 켜기/끄기 ────────────────────────────────────────
-  function enable() {
-    enabled = true;
-    _persist();
-    _syncUI();
-  }
-
-  function disable() {
-    enabled = false;
-    clearFocus();
-    _persist();
-    _syncUI();
-  }
-
-  function toggle() { enabled ? disable() : enable(); }
-
-  // ── 저장/불러오기 ─────────────────────────────────────────
-  function _persist() {
-    try { localStorage.setItem('readingGuide', enabled ? '1' : '0'); } catch (_) {}
-  }
-
-  // ── UI 동기화 ─────────────────────────────────────────────
-  function _syncUI() {
-    const sw   = document.getElementById('readingGuideSwitch');
-    const desc = document.getElementById('readingGuideDesc');
-    const icon = document.getElementById('readingGuideIcon');
-    if (sw)   sw.classList.toggle('on', enabled);
-    if (desc) desc.textContent = enabled ? '기능 끄기' : '항목을 클릭해 집중해보세요';
-    if (icon) {
-      icon.style.background = enabled ? 'var(--blue-focus)' : 'var(--blue-pale)';
-      icon.style.color      = enabled ? '#fff'              : 'var(--blue-focus)';
-    }
-  }
-
-  // ── 클릭 인터셉트 (캡처 페이즈 — toggleCheck 이전에 실행) ──
+  // ── 클릭 인터셉트 (캡처 페이즈 — 모든 핸들러보다 먼저 실행) ──
   function _onCapture(e) {
-    if (!enabled) return;
-    const item = e.target.closest('#screen-checklist .check-item');
-    if (item) {
-      e.stopPropagation(); // 캡처 페이즈에서 전파 중단 → toggleCheck 차단
-      setFocus(item);
+    // ① 승인된 합성 클릭은 통과
+    if (e === _approvedClick) return;
+
+    // ② 모달 내부 클릭은 인터셉트하지 않음 (지연 없이 즉시 실행)
+    if (e.target.closest('.modal-overlay')) return;
+
+    const el  = e.target.closest(READABLE_SELECTOR);
+    const now = Date.now();
+
+    // ③ 대상 요소가 없으면 읽기 가이드 해제 후 원래 클릭 통과
+    if (!el) {
+      _lastTapKey  = null;
+      _lastTapTime = 0;
+      if (focused) clearFocus();
+      return; // stopPropagation 안 함 → 원래 기능 유지
+    }
+
+    // ④ 대상 요소 클릭: 원본 클릭 차단 (싱글·더블 공통)
+    e.stopPropagation();
+
+    const key      = _getKey(el);
+    const isDouble = (key === _lastTapKey) && (now - _lastTapTime) < DOUBLE_TAP_MS;
+
+    if (isDouble) {
+      // 더블탭 → 보류 중인 싱글탭 취소, 읽기 가이드 실행
+      _clearPending(key);
+      _lastTapKey  = null;
+      _lastTapTime = 0;
+      setFocus(el);
+    } else {
+      // 싱글탭 → 300ms 후 원래 기능 실행 (더블이 오면 취소됨)
+      _lastTapKey  = key;
+      _lastTapTime = now;
+      _scheduleAction(key, e.target, e.clientX, e.clientY);
     }
   }
 
@@ -99,100 +141,70 @@
     const s = document.createElement('style');
     s.id = 'reading-guide-styles';
     s.textContent = `
-      /* 기본 전환 (항상 적용) */
-      #screen-checklist .screen-header,
-      #screen-checklist .progress-chips,
-      #screen-checklist .checklist-wrap .check-item,
-      #screen-checklist .add-task-btn,
-      #screen-checklist .add-task-input-wrap,
-      #screen-checklist .reading-guide-wrap {
-        transition: filter 0.35s ease, opacity 0.35s ease,
-                    transform 0.25s ease, box-shadow 0.25s ease;
+      /* 블러 전환 (transition이 없는 요소에만 추가) */
+      .setting-row, .time-btn, .sound-option,
+      .session-badge, .timer-ring-wrap, .session-dots,
+      .bottom-nav {
+        transition: filter 0.35s ease, opacity 0.35s ease;
       }
 
-      /* reading-active: 헤더·칩 블러 */
+      /* ── 하단 네비게이션 블러 ── */
+      .reading-guide-active .bottom-nav {
+        filter: blur(3px);
+        opacity: 0.28;
+      }
+
+      /* ── 타이머 화면 블러 ── */
+      #screen-timer.reading-active .demo-tab:not(.reading-focused),
+      #screen-timer.reading-active .session-badge:not(.reading-focused),
+      #screen-timer.reading-active .timer-ring-wrap:not(.reading-focused),
+      #screen-timer.reading-active .main-btn:not(.reading-focused),
+      #screen-timer.reading-active .secondary-btn:not(.reading-focused),
+      #screen-timer.reading-active .session-dots {
+        filter: blur(3px);
+        opacity: 0.28;
+      }
+
+      /* ── 체크리스트 화면 블러 ── */
       #screen-checklist.reading-active .screen-header,
-      #screen-checklist.reading-active .progress-chips {
+      #screen-checklist.reading-active .chip:not(.reading-focused),
+      #screen-checklist.reading-active .check-item:not(.reading-focused),
+      #screen-checklist.reading-active .add-task-btn:not(.reading-focused),
+      #screen-checklist.reading-active .add-task-input-wrap {
         filter: blur(3px);
         opacity: 0.28;
       }
 
-      /* reading-active: 포커스 없는 항목 블러 */
-      #screen-checklist.reading-active .checklist-wrap .check-item:not(.reading-focused) {
+      /* ── 설정 화면 블러 ── */
+      #screen-settings.reading-active .screen-header,
+      #screen-settings.reading-active .section-label,
+      #screen-settings.reading-active .setting-row:not(.reading-focused),
+      #screen-settings.reading-active .time-btn:not(.reading-focused),
+      #screen-settings.reading-active .sound-option:not(.reading-focused) {
         filter: blur(3px);
         opacity: 0.28;
       }
 
-      /* reading-active: 하단 버튼 살짝 블러 */
-      #screen-checklist.reading-active .add-task-btn,
-      #screen-checklist.reading-active .add-task-input-wrap,
-      #screen-checklist.reading-active .reading-guide-wrap {
-        filter: blur(2px);
-        opacity: 0.35;
-      }
-
-      /* 포커스된 항목 강조 */
-      #screen-checklist .check-item.reading-focused {
+      /* ── 포커스된 항목 강조 (블러 해제) ── */
+      .reading-focused {
         filter: none !important;
         opacity: 1 !important;
-        border-color: var(--blue-focus) !important;
-        background: var(--bg-card) !important;
-        box-shadow:
-          0 0 0 2.5px rgba(155,111,208,0.55),
-          0 8px 28px rgba(155,111,208,0.22) !important;
-        transform: scale(1.018) !important;
         position: relative;
         z-index: 2;
       }
 
-      /* 읽기 가이드 토글 버튼 영역 */
-      .reading-guide-wrap {
-        margin: 14px 24px 0;
-      }
-
-      .reading-guide-btn {
-        width: 100%;
-        display: flex;
-        align-items: center;
-        gap: 14px;
-        padding: 14px 18px;
-        background: var(--bg-card);
-        border: none;
-        border-radius: var(--radius-sm);
-        box-shadow: var(--shadow-card);
-        cursor: pointer;
-        font-family: var(--current-font);
-        text-align: left;
-        transition: background 0.2s ease, transform 0.15s ease;
-      }
-      .reading-guide-btn:active {
-        background: var(--btn-secondary);
-        transform: scale(0.985);
-      }
-
-      .reading-guide-icon-wrap {
-        width: 38px; height: 38px;
-        border-radius: 11px;
-        background: var(--blue-pale);
-        color: var(--blue-focus);
-        display: flex; align-items: center; justify-content: center;
-        font-size: 16px;
-        flex-shrink: 0;
-        transition: background 0.3s ease, color 0.3s ease;
-      }
-
-      .reading-guide-info { flex: 1; text-align: left; }
-
-      .reading-guide-name {
-        font-size: 15px;
-        font-weight: 500;
-        color: var(--text-primary);
-      }
-
-      .reading-guide-desc {
-        font-size: 12px;
-        color: var(--text-muted);
-        margin-top: 2px;
+      /* 확대 적용 (.timer-ring-wrap 제외 — pulse 애니메이션 유지) */
+      .check-item.reading-focused,
+      .chip.reading-focused,
+      .add-task-btn.reading-focused,
+      .demo-tab.reading-focused,
+      .main-btn.reading-focused,
+      .secondary-btn.reading-focused,
+      .session-badge.reading-focused,
+      .setting-row.reading-focused,
+      .time-btn.reading-focused,
+      .sound-option.reading-focused {
+        transform: scale(1.018) !important;
       }
     `;
     document.head.appendChild(s);
@@ -201,23 +213,23 @@
   // ── 초기화 ────────────────────────────────────────────────
   function init() {
     _injectStyles();
-    try { enabled = localStorage.getItem('readingGuide') === '1'; } catch (_) {}
     document.addEventListener('click', _onCapture, true);
-    if (document.readyState === 'loading') {
-      window.addEventListener('DOMContentLoaded', _syncUI);
-    } else {
-      _syncUI();
-    }
+
+    // 화면 전환 시 포커스된 화면이 비활성화되면 읽기 가이드 자동 해제
+    document.querySelectorAll('.screen').forEach(screen => {
+      new MutationObserver(() => {
+        if (!focused) return;
+        if (screen.classList.contains('active')) return;
+        if (focused.closest('.screen') === screen) clearFocus();
+      }).observe(screen, { attributes: true, attributeFilter: ['class'] });
+    });
   }
 
   init();
 
   window.ReadingGuide = {
-    toggle,
-    enable,
-    disable,
     clearFocus,
     reapplyFocus,
-    isEnabled: () => enabled,
+    isEnabled: () => focused !== null,
   };
 })();
