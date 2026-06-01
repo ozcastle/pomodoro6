@@ -23,10 +23,10 @@ let pendingSessionCount = null;
 const savedSecsPerMode = { focus: null, rest: null, done: null };
 
 const TIME_CONFIG = {
-  focus:    { min: 1, max: 120, step: 1, unit: '분', label: '집중 시간',      valId: 'focusTimeVal'   },
-  rest:     { min: 1, max: 60,  step: 1, unit: '분', label: '짧은 휴식 시간', valId: 'restTimeVal'    },
+  focus:    { min: 5, max: 120, step: 1, unit: '분', label: '집중 시간',      valId: 'focusTimeVal'   },
+  rest:     { min: 3, max: 60,  step: 1, unit: '분', label: '짧은 휴식 시간', valId: 'restTimeVal'    },
   count:    { min: 1, max: 10,  step: 1, unit: '회', label: '세션 횟수',      valId: 'countVal'       },
-  longRest: { min: 1, max: 120, step: 1, unit: '분', label: '긴 휴식 시간',   valId: 'longRestTimeVal'},
+  longRest: { min: 5, max: 120, step: 1, unit: '분', label: '긴 휴식 시간',   valId: 'longRestTimeVal'},
 };
 
 // ============================================================
@@ -61,11 +61,9 @@ function _rawSetWave(ratio) {
   const level = 8 + progress * 84;
   const front = document.getElementById('waveFillFront');
   const back  = document.getElementById('waveFillBack');
-  const bl    = document.getElementById('bubbleLayer');
   if (!front || !back) return;
   front.style.height = level + '%';
   back.style.height  = (level + 3) + '%';
-  if (bl) bl.style.clipPath = `inset(${(100 - level).toFixed(1)}% 0 0 0)`;
 }
 
 function _startWaveRaf() {
@@ -445,8 +443,6 @@ function _applyModeUI(mode) {
     _highlightTab(2);
   }
 
-  const bubbleLayer = document.getElementById('bubbleLayer');
-  if (bubbleLayer) bubbleLayer.classList.toggle('active', mode === 'done');
   _applyWaveStyle(mode);
   updateSessionBadge();
 }

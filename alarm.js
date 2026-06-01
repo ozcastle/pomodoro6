@@ -525,12 +525,15 @@
     const voices = global.speechSynthesis.getVoices();
     if (!voices.length) return null;
     return voices.find(v => v.lang === 'ko-KR')
-        || voices.find(v => v.lang && v.lang.startsWith('ko'))
+        || voices.find(v => v.lang && v.lang.toLowerCase().startsWith('ko'))
         || null;
   }
   if (global.speechSynthesis) {
     cachedKoVoice = pickKoVoice();
-    global.speechSynthesis.onvoiceschanged = () => { cachedKoVoice = pickKoVoice(); };
+    // 보이스 목록은 비동기로 로드되므로(특히 Chrome) 갱신될 때마다 다시 고른다.
+    global.speechSynthesis.addEventListener('voiceschanged', () => {
+      cachedKoVoice = pickKoVoice();
+    });
   }
 
   function speak(text, options) {
@@ -541,15 +544,34 @@
       return false;
     }
     const opts = Object.assign({ lang: 'ko-KR', rate: 1.0, pitch: 1.0, volume: 1.0 }, options || {});
+    const synth = global.speechSynthesis;
+
+    // 보이스가 아직 안 잡혔으면 호출 시점에 한 번 더 시도
+    if (!cachedKoVoice) cachedKoVoice = pickKoVoice();
+
+    const doSpeak = () => {
+      try {
+        const utter = new global.SpeechSynthesisUtterance(text);
+        utter.lang   = opts.lang;
+        utter.rate   = opts.rate;
+        utter.pitch  = opts.pitch;
+        utter.volume = opts.volume;
+        // 한국어 보이스가 있을 때만 지정 — 없으면 lang만으로 기본 보이스 사용
+        if (cachedKoVoice) utter.voice = cachedKoVoice;
+        utter.onerror = (e) => console.warn('[alarm] TTS error:', (e && e.error) || e);
+        // 일부 브라우저는 일시정지 상태로 멈춰 있어 resume()이 필요하다.
+        try { synth.resume(); } catch (e) {}
+        synth.speak(utter);
+      } catch (e) {
+        console.warn('[alarm] TTS failed:', e);
+      }
+    };
+
     try {
-      global.speechSynthesis.cancel();
-      const utter = new global.SpeechSynthesisUtterance(text);
-      utter.lang   = opts.lang;
-      utter.rate   = opts.rate;
-      utter.pitch  = opts.pitch;
-      utter.volume = opts.volume;
-      if (cachedKoVoice) utter.voice = cachedKoVoice;
-      global.speechSynthesis.speak(utter);
+      synth.cancel();
+      // Chrome 버그 회피: cancel() 직후 곧바로 speak()하면 발화가 씹히는 경우가 있어
+      // 한 틱 뒤에 말하게 한다.
+      setTimeout(doSpeak, 80);
       return true;
     } catch (e) {
       console.warn('[alarm] TTS failed:', e);

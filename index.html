@@ -74,7 +74,8 @@
     --wave-done-2: #E888B0;
     --font-scale: 1;          /* 글자크기 배율 — 슬라이더로 1.0(보통) ~ 1.35 조절 (전체 UI) */
     --font-size-base: calc(17px * var(--font-scale));
-    --letter-spacing: 0cm;    /* 자간 — 슬라이더로 0cm(보통) ~ 1cm 조절 */
+    --letter-spacing: 0.12em; /* 자간 — 슬라이더로 0.12em ~ 0.25em 조절 (두 줄 넘침 방지 상한) */
+    --word-spacing: 0.12em;   /* 단어 간격 — 슬라이더로 0.12em ~ 0.3em 조절 */
     --line-height: 1.7;
     --font-weight: 400;
     --current-font: 'PeachMarket', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
@@ -89,6 +90,7 @@
      우선순위를 높여, 슬라이더 값이 화면 전체에 균일하게 반영되도록 한다. */
   *:not(i):not([class*="fa-"]):not([class^="fa-"]) {
     letter-spacing: var(--letter-spacing);
+    word-spacing: var(--word-spacing);
   }
 
   /* 자간을 키워도 이모티콘(아이콘)은 항상 고정 — 아이콘 글리프와
@@ -101,6 +103,7 @@
   .modal-icon-wrap, .check-box, .font-radio, .nav-item i,
   .time-step {
     letter-spacing: normal !important;
+    word-spacing: normal !important;
   }
 
   /* ── 가운데 정렬 보정 ──
@@ -326,17 +329,15 @@
     z-index: 2;
   }
 
-  /* 타이머 숫자는 예외 처리 — 원 밖으로 튀어나가지 않도록
-     · 글자크기: 전체 슬라이더가 더 커도 최대 115%로 제한
-     · 자간: 전체 자간의 0.5배만 적용하되, 원을 넘지 않도록 0.3cm 상한
-       (가운데정렬 보정 text-indent도 같은 값으로 맞춤) */
+  /* 타이머 숫자는 예외 처리 — 자간 설정에서 제외 (항상 normal),
+     글자크기는 원 밖으로 튀어나가지 않도록 최대 115%로 제한 */
   .timer-time {
-    --timer-ls: min(calc(var(--letter-spacing) * 0.5), 0.3cm);
     font-size: calc(56px * min(var(--font-scale), 1.15));
     font-weight: 600;
     color: #FFFFFF;
-    letter-spacing: var(--timer-ls) !important;
-    text-indent: var(--timer-ls);
+    letter-spacing: normal !important;
+    word-spacing: normal !important;
+    text-indent: 0;
     line-height: 1;
     text-shadow: 0 2px 8px rgba(60,30,90,0.30);
   }
@@ -1389,29 +1390,58 @@ function applyTheme(mode) {
   }
 
   // ============================================================
-  // LETTER SPACING (자간) — 전체 UI에 적용
-  // 슬라이더 값(cm)을 --letter-spacing 변수로 반영하면
+  // LETTER SPACING (자간) — 전체 UI에 적용 (타이머 숫자는 제외)
+  // 슬라이더 값(em)을 --letter-spacing 변수로 반영하면
   // 위의 *:not(...) 규칙을 통해 모든 텍스트에 균일 적용된다.
-  // 0cm ~ 1cm 범위. 가운데 정렬 보정은 text-indent로 처리.
+  // 0.12em ~ 0.25em 범위. (상한 0.25em — 글자가 두 줄로 넘치지 않는 최대치)
+  // 가운데 정렬 보정은 text-indent로 처리.
   // ============================================================
-  const LS_MIN = 0, LS_MAX = 0.5, LS_DEFAULT = 0;  /* 최소=기본=보통(0cm) */
+  const LS_MIN = 0.12, LS_MAX = 0.25, LS_DEFAULT = 0.12;
 
-  function setLetterSpacing(cm) {
-    let v = parseFloat(cm);
+  function setLetterSpacing(em) {
+    let v = parseFloat(em);
     if (isNaN(v)) v = LS_DEFAULT;
     v = Math.min(LS_MAX, Math.max(LS_MIN, v));
-    document.documentElement.style.setProperty('--letter-spacing', v + 'cm');
+    document.documentElement.style.setProperty('--letter-spacing', v + 'em');
     if (typeof _save === 'function') _save('letterSpacing', String(v));
     const label = document.getElementById('letterSpacingVal');
-    if (label) label.textContent = v <= 0 ? '기본' : v.toFixed(2) + 'cm';
+    if (label) label.textContent = v.toFixed(2) + 'em';
   }
 
   function initLetterSpacing() {
     let saved = LS_DEFAULT;
     if (typeof _load === 'function') saved = parseFloat(_load('letterSpacing', String(LS_DEFAULT)));
+    if (isNaN(saved)) saved = LS_DEFAULT;
+    saved = Math.min(LS_MAX, Math.max(LS_MIN, saved));
     const slider = document.getElementById('letterSpacingSlider');
     if (slider) slider.value = saved;
     setLetterSpacing(saved);
+  }
+
+  // ============================================================
+  // WORD SPACING (단어 간격) — 전체 UI에 적용 (타이머 숫자는 제외)
+  // 슬라이더 값(em)을 --word-spacing 변수로 반영. 0.12em ~ 0.3em 범위.
+  // ============================================================
+  const WS_MIN = 0.12, WS_MAX = 0.3, WS_DEFAULT = 0.12;
+
+  function setWordSpacing(em) {
+    let v = parseFloat(em);
+    if (isNaN(v)) v = WS_DEFAULT;
+    v = Math.min(WS_MAX, Math.max(WS_MIN, v));
+    document.documentElement.style.setProperty('--word-spacing', v + 'em');
+    if (typeof _save === 'function') _save('wordSpacing', String(v));
+    const label = document.getElementById('wordSpacingVal');
+    if (label) label.textContent = v.toFixed(2) + 'em';
+  }
+
+  function initWordSpacing() {
+    let saved = WS_DEFAULT;
+    if (typeof _load === 'function') saved = parseFloat(_load('wordSpacing', String(WS_DEFAULT)));
+    if (isNaN(saved)) saved = WS_DEFAULT;
+    saved = Math.min(WS_MAX, Math.max(WS_MIN, saved));
+    const slider = document.getElementById('wordSpacingSlider');
+    if (slider) slider.value = saved;
+    setWordSpacing(saved);
   }
 
   // ============================================================
@@ -1633,8 +1663,9 @@ function applyTheme(mode) {
 
   // 초기 진입 시: 저장된 선택을 UI에 반영하고 이벤트 바인딩
   window.addEventListener('DOMContentLoaded', () => {
-    // 자간 / 글자크기 설정 복원 — 사운드 로딩 여부와 무관하게 항상 먼저 적용
+    // 자간 / 단어 간격 / 글자크기 설정 복원 — 사운드 로딩 여부와 무관하게 항상 먼저 적용
     initLetterSpacing();
+    initWordSpacing();
     initFontScale();
 
     if (!window.Sounds) return;
@@ -1885,8 +1916,20 @@ function applyTheme(mode) {
           <div class="slider-label">
             <span>자간</span>
           </div>
-          <input type="range" id="letterSpacingSlider" min="0" max="0.5" step="0.05" value="0"
+          <input type="range" id="letterSpacingSlider" min="0.12" max="0.25" step="0.01" value="0.12"
                  oninput="setLetterSpacing(this.value)" aria-label="자간 조절">
+          <div class="time-slider-range" style="margin-top:8px;">
+            <span>좁게</span>
+            <span>넓게</span>
+          </div>
+        </div>
+        <!-- 단어 간격 -->
+        <div class="slider-row">
+          <div class="slider-label">
+            <span>단어 간격</span>
+          </div>
+          <input type="range" id="wordSpacingSlider" min="0.12" max="0.3" step="0.01" value="0.12"
+                 oninput="setWordSpacing(this.value)" aria-label="단어 간격 조절">
           <div class="time-slider-range" style="margin-top:8px;">
             <span>좁게</span>
             <span>넓게</span>

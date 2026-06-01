@@ -16,9 +16,12 @@
     let tasks     = [];
     let filter    = 'all';
     let _seq      = 0;
-    let _targetId  = null;
-    let _pressTimer = null;
-    let _pressEl    = null;
+    let _targetId    = null;
+    let _pressTimer  = null;
+    let _pressEl     = null;
+    let _pressStartX = 0;
+    let _pressStartY = 0;
+    let _longPressFired = false;
 
     function _genId() { return 'task_' + Date.now() + '_' + (++_seq); }
 
@@ -86,7 +89,11 @@
           item.appendChild(box);
           item.appendChild(text);
 
-          item.addEventListener('click', () => _toggleTask(t.id));
+          item.addEventListener('click', () => {
+            if (_longPressFired) { _longPressFired = false; return; }
+            _toggleTask(t.id);
+          });
+          item.addEventListener('contextmenu', e => e.preventDefault());
 
           item.addEventListener('pointerdown',   e  => _startPress(e, t.id, item));
           item.addEventListener('pointermove',   _cancelPress);
@@ -148,20 +155,28 @@
       if (filter === 'done') setFilter('all'); else render();
     }
 
-    // ── 롱 프레스 (3초) ───────────────────────────────────────
+    // ── 롱 프레스 (1.5초) ────────────────────────────────────
     function _startPress(e, id, el) {
       _cancelPress();
+      _pressStartX = e.clientX;
+      _pressStartY = e.clientY;
       _pressEl = el;
       el.classList.add('long-pressing');
       _pressTimer = setTimeout(() => {
         _targetId = id;
         _pressEl  = null;
+        _longPressFired = true;
         el.classList.remove('long-pressing');
         _openActionModal();
       }, 1500);
     }
 
-    function _cancelPress() {
+    function _cancelPress(e) {
+      if (e && e.type === 'pointermove') {
+        const dx = e.clientX - _pressStartX;
+        const dy = e.clientY - _pressStartY;
+        if (Math.sqrt(dx * dx + dy * dy) < 10) return;
+      }
       if (_pressTimer) { clearTimeout(_pressTimer); _pressTimer = null; }
       if (_pressEl)    { _pressEl.classList.remove('long-pressing'); _pressEl = null; }
     }

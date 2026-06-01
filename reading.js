@@ -1,4 +1,4 @@
-/**
+﻿/**
  * reading.js — 읽기 가이드 (포커스 블러)
  *
  * 싱글탭/클릭  → 300ms 후 원래 기능 실행 (더블 확인 후)
@@ -13,7 +13,7 @@
   const READABLE_SELECTOR = [
     '.check-item', '.chip', '.add-task-btn',
     '.demo-tab', '.main-btn', '.secondary-btn', '.session-badge', '.timer-ring-wrap',
-    '.setting-row', '.time-btn', '.sound-option',
+    '.setting-row', '.time-btn', '.sound-option', '.slider-row', '.color-row',
   ].join(', ');
 
   const DOUBLE_TAP_MS = 300;
@@ -143,6 +143,7 @@
     s.textContent = `
       /* 블러 전환 (transition이 없는 요소에만 추가) */
       .setting-row, .time-btn, .sound-option,
+      .slider-row, .color-row,
       .session-badge, .timer-ring-wrap, .session-dots,
       .bottom-nav {
         transition: filter 0.35s ease, opacity 0.35s ease;
@@ -180,7 +181,9 @@
       #screen-settings.reading-active .section-label,
       #screen-settings.reading-active .setting-row:not(.reading-focused),
       #screen-settings.reading-active .time-btn:not(.reading-focused),
-      #screen-settings.reading-active .sound-option:not(.reading-focused) {
+      #screen-settings.reading-active .sound-option:not(.reading-focused),
+      #screen-settings.reading-active .slider-row:not(.reading-focused),
+      #screen-settings.reading-active .color-row:not(.reading-focused) {
         filter: blur(3px);
         opacity: 0.28;
       }
@@ -203,7 +206,9 @@
       .session-badge.reading-focused,
       .setting-row.reading-focused,
       .time-btn.reading-focused,
-      .sound-option.reading-focused {
+      .sound-option.reading-focused,
+      .slider-row.reading-focused,
+      .color-row.reading-focused {
         transform: scale(1.018) !important;
       }
     `;
