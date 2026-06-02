@@ -34,12 +34,12 @@
   }
 
   :root {
-    /* ── 민트 그린 팔레트 ── */
-    --cream: #E8F4F0;
+    /* ── 민트 팔레트 (기본값 = THEMES.focus 와 동일) ── */
+    --cream: #D8F0EA;
     --cream-dark: #A8CFC2;
     --navy: #F5F0EB;
-    --navy-soft: #3DA694;
-    --navy-muted: #6DC0B0;
+    --navy-soft: #2D6B5E;
+    --navy-muted: #4A8A7C;
 
     --blue-focus: #3DA694;
     --blue-light: #6DC0B0;
@@ -73,9 +73,9 @@
     --wave-fill-2: #3DA694;
     --wave-focus: #3DA694;
     --wave-rest: #6DC0B0;
-    --wave-rest-2: #3DA694;
-    --wave-done: #6DC0B0;
-    --wave-done-2: #3DA694;
+    --wave-rest-2: #55AAAA;
+    --wave-done: #F5A0C0;
+    --wave-done-2: #E888B0;
     --font-scale: 1;          /* 글자크기 배율 — 슬라이더로 1.0(보통) ~ 1.35 조절 (전체 UI) */
     --font-size-base: calc(17px * var(--font-scale));
     --letter-spacing: 0.12em; /* 자간 — 슬라이더로 0.12em ~ 0.25em 조절 (두 줄 넘침 방지 상한) */
@@ -1220,6 +1220,7 @@
   .modal-input:focus { border-color: var(--blue-focus); }
 
 </style>
+<script src="onboarding.js" defer></script>
 <script src="alarm.js" defer></script>
 <script src="timer.js" defer></script>
 <script src="reading.js" defer></script>
@@ -1355,7 +1356,7 @@ function applyPalette(t) {
 // 저장된 스와치 색상이 있으면 해당 팔레트를 우선 적용하고,
 // 없을 때만 모드별 기본 팔레트를 사용한다.
 function applyTheme(mode) {
-  const savedBg = _load('bgColor', '#E8F4F0');
+  const savedBg = _load('bgColor', '');
   if (savedBg && SWATCH_THEMES[savedBg]) {
     applyPalette(SWATCH_THEMES[savedBg]);
   } else {
@@ -1367,17 +1368,6 @@ function applyTheme(mode) {
   // SCREEN NAVIGATION
   // ============================================================
   function switchScreen(name, el) {
-    // timer.js의 전역 변수에 직접 접근해서 타이머 일시정지
-    if (name !== 'timer') {
-      try {
-        if (running) {
-          running = false;
-          clearInterval(intervalId);
-          const mainBtn = document.getElementById('mainBtn');
-          if (mainBtn) mainBtn.innerHTML = '<i class="fa fa-play"></i>&nbsp; 계속';
-        }
-      } catch(e) {}
-    }
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
     document.getElementById('screen-' + name).classList.add('active');
