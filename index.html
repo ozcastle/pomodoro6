@@ -34,16 +34,16 @@
   }
 
   :root {
-    /* ── 민트 팔레트 (기본값 = THEMES.focus 와 동일) ── */
-    --cream: #D8F0EA;
-    --cream-dark: #A8CFC2;
+    /* ── 파스텔 라벤더 팔레트 ── */
+    --cream: #F0EBF8;
+    --cream-dark: #C5B4DC;
     --navy: #F5F0EB;
-    --navy-soft: #2D6B5E;
-    --navy-muted: #4A8A7C;
+    --navy-soft: #5D4680;
+    --navy-muted: #7B62A0;
 
-    --blue-focus: #3DA694;
-    --blue-light: #6DC0B0;
-    --blue-pale: rgba(109,192,176,0.20);
+    --blue-focus: #9B6FD0;
+    --blue-light: #B48EE0;
+    --blue-pale: rgba(155,111,208,0.15);
 
     --mint: #6DC0B0;
     --mint-light: #8ED4C6;
@@ -53,25 +53,25 @@
     --warm-yellow-light: #FAE08A;
     --warm-yellow-pale: rgba(245,200,66,0.18);
 
-    --text-primary: #1F3D36;
-    --text-secondary: #3B5F55;
-    --text-muted: #6B8A82;
+    --text-primary: #2E1F4A;
+    --text-secondary: #5A4470;
+    --text-muted: #8B72A8;
 
-    --bg: #E8F4F0;
-    --bg-card: #F2FAF7;
-    --btn-secondary: #D0E8DE;
-    --btn-secondary-active: #B8DDD0;
-    --shadow-soft: 0 4px 24px rgba(61,166,148,0.12);
-    --shadow-card: 0 2px 16px rgba(61,166,148,0.10);
+    --bg: #EDE6F8;
+    --bg-card: #F8F4FF;
+    --btn-secondary: #E0D4F5;
+    --btn-secondary-active: #D0BEF0;
+    --shadow-soft: 0 4px 24px rgba(100,70,160,0.12);
+    --shadow-card: 0 2px 16px rgba(100,70,160,0.10);
     --radius-lg: 28px;
     --radius-md: 20px;
     --radius-sm: 14px;
     /* ── WAVE TIMER ── */
-    --wave-bg: #C8E0D5;
-    --wave-bg-ring: rgba(109,192,176,0.40);
-    --wave-fill: #6DC0B0;
-    --wave-fill-2: #3DA694;
-    --wave-focus: #3DA694;
+    --wave-bg: #D8CCF0;
+    --wave-bg-ring: rgba(155,111,208,0.35);
+    --wave-fill: #9B6FD0;
+    --wave-fill-2: #8358C0;
+    --wave-focus: #9B6FD0;
     --wave-rest: #6DC0B0;
     --wave-rest-2: #55AAAA;
     --wave-done: #F5A0C0;
@@ -1220,7 +1220,6 @@
   .modal-input:focus { border-color: var(--blue-focus); }
 
 </style>
-<script src="onboarding.js" defer></script>
 <script src="alarm.js" defer></script>
 <script src="timer.js" defer></script>
 <script src="reading.js" defer></script>
@@ -2156,7 +2155,7 @@ function applyTheme(mode) {
         <button class="main-btn btn-focus" onclick="TaskManager.openEdit()">
           <i class="fa fa-pen"></i>&nbsp; 수정
         </button>
-        <button class="main-btn" style="background:var(--btn-secondary);color:var(--text-primary);" onclick="TaskManager.deleteTask()">
+        <button class="main-btn" style="background:var(--btn-secondary);color:var(--text-primary);margin: 0 0 10px;" onclick="TaskManager.deleteTask()">
           <i class="fa fa-trash"></i>&nbsp; 삭제
         </button>
         <button class="secondary-btn" onclick="TaskManager.closeActionModal()">취소</button>
